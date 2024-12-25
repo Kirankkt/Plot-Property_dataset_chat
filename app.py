@@ -39,7 +39,7 @@ def preprocess_data(df, text_column):
 property_texts = preprocess_data(property_df, 'Plot__DESC')
 plot_texts = preprocess_data(plot_df, 'Location')
 
-# Function to generate embeddings
+# Function to generate embeddings using OpenAI's updated API
 def generate_embeddings(texts):
     embeddings = []
     for text in texts:
