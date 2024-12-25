@@ -3,18 +3,32 @@ import pandas as pd
 import numpy as np
 import faiss
 import streamlit as st
-import google.generativeai as gemini
+import openai
 from fuzzywuzzy import process
 
-# Set your Gemini API key
-os.environ['GOOGLE_API_KEY'] = 'AIzaSyBy791VYFuQjFIkCTV_ELBkGKIsv17wH_M'
+# Set your OpenAI API key
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# Initialize Gemini API
-gemini.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+# Load datasets with error handling for parsing issues
+try:
+    property_df = pd.read_csv(
+        'Updated_Cleaned_Dataset (1).csv',
+        delimiter=',',
+        encoding='utf-8'
+    )
+except pd.errors.ParserError as e:
+    st.error(f"Error loading property dataset: {e}")
+    property_df = pd.DataFrame()  # Fallback to an empty DataFrame
 
-# Load datasets
-property_df = pd.read_csv('Updated_Cleaned_Dataset (1).csv')
-plot_df = pd.read_csv('standardized_locations_dataset.csv')
+try:
+    plot_df = pd.read_csv(
+        'standardized_locations_dataset.csv',
+        delimiter=',',
+        encoding='utf-8'
+    )
+except pd.errors.ParserError as e:
+    st.error(f"Error loading plot dataset: {e}")
+    plot_df = pd.DataFrame()  # Fallback to an empty DataFrame
 
 # Function to preprocess data
 def preprocess_data(df, text_column):
@@ -29,8 +43,11 @@ plot_texts = preprocess_data(plot_df, 'Location')
 def generate_embeddings(texts):
     embeddings = []
     for text in texts:
-        response = gemini.generate_embeddings(text=text)
-        embeddings.append(response['embedding'])
+        response = openai.Embedding.create(
+            input=text,
+            model="text-embedding-ada-002"
+        )
+        embeddings.append(response['data'][0]['embedding'])
     return embeddings
 
 # Generate embeddings for both datasets
@@ -69,7 +86,7 @@ if user_input:
         st.write(f"Interpreting query with location: {location_in_query}")
 
     # Generate embedding for user query
-    query_embedding = gemini.generate_embeddings(text=user_input)['embedding']
+    query_embedding = generate_embeddings([user_input])[0]
 
     # Search for similar embeddings in FAISS
     D, I = index.search(np.array([query_embedding]).astype('float32'), k=5)
@@ -86,7 +103,13 @@ if user_input:
     # Check if relevant data is found
     if retrieved_texts:
         context = ' '.join(retrieved_texts)
-        response = gemini.generate_text(prompt=f"Context: {context}\n\nQuestion: {user_input}\nAnswer:")
-        st.write(response['generated_text'])
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": f"Context: {context}\n\nQuestion: {user_input}\nAnswer:"}
+            ]
+        )
+        st.write(response['choices'][0]['message']['content'])
     else:
         st.write("Sorry, this information is not available in the datasets.")
