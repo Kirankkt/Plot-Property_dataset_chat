@@ -13,8 +13,8 @@ os.environ['GOOGLE_API_KEY'] = 'AIzaSyBy791VYFuQjFIkCTV_ELBkGKIsv17wH_M'
 gemini.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 
 # Load datasets
-property_df = pd.read_csv('/mnt/data/Updated_Cleaned_Dataset (1).csv')
-plot_df = pd.read_csv('/mnt/data/standardized_locations_dataset.csv')
+property_df = pd.read_csv('https://github.com/Kirankkt/Plot-Property_dataset_chat/blob/main/Updated_Cleaned_Dataset%20(1).csv')
+plot_df = pd.read_csv('https://github.com/Kirankkt/Plot-Property_dataset_chat/blob/main/standardized_locations_dataset.csv')
 
 # Function to preprocess data
 def preprocess_data(df, text_column):
