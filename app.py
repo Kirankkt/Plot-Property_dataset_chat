@@ -6,8 +6,8 @@ import streamlit as st
 import openai
 from fuzzywuzzy import process
 
-# Set your OpenAI API key
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# Set your OpenAI API key from Streamlit secrets
+openai.api_key = st.secrets['OPENAI_API_KEY']
 
 # Load datasets with error handling for parsing issues
 try:
